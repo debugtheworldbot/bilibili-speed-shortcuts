@@ -17,11 +17,45 @@
 
 let speedOptions = [];
 const speedList = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+let upKey = "=";
+let downKey = "-";
 function addActionBtns() {
   const videoArea = document.querySelector(".bpx-player-primary-area");
   const button = document.createElement("button");
   button.innerHTML = "倍速";
-  button.style = "cursor: pointer;position: absolute;left: 0;bottom: 0;";
+  button.style = "cursor: pointer;position: absolute;right: -30px;bottom: 0;";
+  button.addEventListener("click", () => {
+    const div = document.createElement("div");
+    const downInput = document.createElement("input");
+    const upInput = document.createElement("input");
+    const saveBtn = document.createElement("button");
+    downInput.value = downKey;
+    upInput.value = upKey;
+    downInput.maxLength = upInput.maxLength = 1;
+    downInput.style = "width: 1rem";
+    upInput.style = "width: 1rem";
+    div.style.position = "absolute";
+    div.style.right = "0";
+    div.style.bottom = "0";
+    div.style.background = "white";
+    div.style.zIndex = "1000";
+    div.append("倍速+");
+    div.appendChild(downInput);
+    div.append("倍速-");
+    div.appendChild(upInput);
+    div.appendChild(saveBtn);
+    videoArea.appendChild(div);
+    saveBtn.innerHTML = "保存";
+    saveBtn.addEventListener("click", () => {
+      upKey = upInput.value;
+      downKey = downInput.value;
+      div.innerHTML = "保存成功";
+      setTimeout(() => {
+        div.remove();
+      }, 3000);
+    });
+  });
   videoArea.appendChild(button);
 }
 
@@ -48,10 +82,10 @@ function bindKeys() {
   document.addEventListener("keydown", (e) => {
     const currentSpeed = getCurrentSpeed();
     currentIndex = speedList.indexOf(parseFloat(currentSpeed));
-    if (e.key === "=") {
+    if (e.key === upKey) {
       currentIndex =
         currentIndex >= speedList.length - 1 ? currentIndex : currentIndex + 1;
-    } else if (e.key === "-") {
+    } else if (e.key === downKey) {
       currentIndex = currentIndex <= 0 ? currentIndex : currentIndex - 1;
     }
     const speed = speedList[currentIndex];
