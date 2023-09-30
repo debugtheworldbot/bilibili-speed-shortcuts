@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 倍速控制
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.3
 // @description  使用快捷键控制bilibili的倍速选择
 // @author       pipizhu
 // @match        http*://www.bilibili.com/video/*
@@ -18,8 +18,8 @@
 let speedOptions = [];
 const speedList = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-let upKey = "=";
-let downKey = "-";
+let upKey = ">";
+let downKey = "<";
 function addActionBtns() {
   const videoArea = document.querySelector(".bpx-player-primary-area");
   const button = document.createElement("button");
@@ -60,7 +60,7 @@ function addActionBtns() {
 }
 
 async function init() {
-  addActionBtns();
+  // addActionBtns();
   try {
     await delay(1000);
     speedOptions = await initKeyElems();
@@ -72,7 +72,7 @@ async function init() {
 
 function getCurrentSpeed() {
   return speedOptions.find((item) =>
-    item.className.includes("bpx-state-active"),
+    item.className.includes("bpx-state-active")
   ).dataset.value;
 }
 
@@ -104,7 +104,7 @@ async function initKeyElems() {
     return new Promise(async (resolve, reject) => {
       // await delay(1000)
       const ctrlKeylist = Array.from(
-        document.querySelectorAll(".bpx-player-ctrl-playbackrate-menu li"),
+        document.querySelectorAll(".bpx-player-ctrl-playbackrate-menu li")
       );
       if (ctrlKeylist.length === 0) {
         if (count <= 20) {
