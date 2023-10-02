@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 倍速控制
 // @namespace    http://tampermonkey.net/
-// @version      0.3
+// @version      0.4
 // @description  使用快捷键控制bilibili的倍速选择
 // @author       pipizhu
 // @match        http*://www.bilibili.com/video/*
@@ -61,10 +61,12 @@ function addActionBtns() {
 
 async function init() {
   // addActionBtns();
+  console.log("init keybindings");
   try {
-    await delay(1000);
+    // await delay(1000);
     speedOptions = await initKeyElems();
     bindKeys();
+    console.log("bind success!");
   } catch (e) {
     console.log("error", e);
   }
@@ -110,12 +112,13 @@ async function initKeyElems() {
         if (count <= 20) {
           count += 1;
           await delay(1000);
-          return getKeys();
+          resolve(await getKeys());
         } else {
           reject("get ctrl keys error ");
         }
       } else {
-        resolve(ctrlKeylist);
+        console.log("get key success");
+        return resolve(ctrlKeylist);
       }
     });
   }
