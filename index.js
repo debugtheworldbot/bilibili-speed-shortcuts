@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 倍速控制
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.8
 // @description  使用快捷键控制bilibili的倍速选择
 // @author       pipizhu
 // @match        http*://www.bilibili.com/video/*
@@ -90,8 +90,12 @@ function bindKeys() {
       setSpeed(1.5);
       return;
     }
-    if (e.key === "0") {
+    if (e.key === "1") {
       setSpeed(1);
+      return;
+    }
+    if (e.key === "3") {
+      setSpeed(3);
       return;
     }
     const currentSpeed = getCurrentSpeed();
@@ -110,7 +114,19 @@ function bindKeys() {
 }
 
 function setSpeed(speed) {
-  speedOptions.find((item) => item.dataset.value === speed.toString()).click();
+  if (speed > 2) {
+    const video = getCurrentVideo();
+    video.playbackRate = speed;
+    return;
+  }
+  const option = speedOptions.find(
+    (item) => item.dataset.value === speed.toString()
+  );
+  if (option) {
+    option.click();
+  } else {
+    console.error("set speed error", speed);
+  }
 }
 
 async function initKeyElems() {
@@ -143,4 +159,11 @@ async function initKeyElems() {
 
 async function delay(time) {
   return new Promise((res) => setTimeout(() => res(), time));
+}
+
+function getCurrentVideo() {
+  let vdos = document.querySelectorAll(".bpx-player-video-wrap bwp-video");
+  if (vdos.length > 0) return vdos;
+  vdos = document.querySelectorAll(".bpx-player-video-wrap video");
+  return vdos[0];
 }
