@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 倍速控制
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @description  使用快捷键控制bilibili的倍速选择
 // @author       pipizhu
 // @match        http*://www.bilibili.com/video/*
@@ -18,8 +18,8 @@
 let speedOptions = [];
 const speedList = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-let upKey = ">";
-let downKey = "<";
+let upKeyCode = "Period";
+let downKeyCode = "Comma";
 function addActionBtns() {
   const videoArea = document.querySelector(".bpx-player-primary-area");
   const button = document.createElement("button");
@@ -30,8 +30,8 @@ function addActionBtns() {
     const downInput = document.createElement("input");
     const upInput = document.createElement("input");
     const saveBtn = document.createElement("button");
-    downInput.value = downKey;
-    upInput.value = upKey;
+    downInput.value = downKeyCode;
+    upInput.value = upKeyCode;
     downInput.maxLength = upInput.maxLength = 1;
     downInput.style = "width: 1rem";
     upInput.style = "width: 1rem";
@@ -48,8 +48,8 @@ function addActionBtns() {
     videoArea.appendChild(div);
     saveBtn.innerHTML = "保存";
     saveBtn.addEventListener("click", () => {
-      upKey = upInput.value;
-      downKey = downInput.value;
+      upKeyCode = upInput.value;
+      downKeyCode = downInput.value;
       div.innerHTML = "保存成功";
       setTimeout(() => {
         div.remove();
@@ -82,12 +82,26 @@ function bindKeys() {
   const currentSpeed = getCurrentSpeed();
   let currentIndex = speedList.indexOf(parseFloat(currentSpeed));
   document.addEventListener("keydown", (e) => {
+    if (e.key === "2") {
+      setSpeed(2);
+      return;
+    }
+    if (e.key === "5") {
+      setSpeed(1.5);
+      return;
+    }
+    if (e.key === "0") {
+      setSpeed(1);
+      return;
+    }
     const currentSpeed = getCurrentSpeed();
     currentIndex = speedList.indexOf(parseFloat(currentSpeed));
-    if (e.key === upKey) {
+    if (e.code === upKeyCode && e.shiftKey) {
+      // press >
       currentIndex =
         currentIndex >= speedList.length - 1 ? currentIndex : currentIndex + 1;
-    } else if (e.key === downKey) {
+    } else if (e.code === downKeyCode && e.shiftKey) {
+      // press <
       currentIndex = currentIndex <= 0 ? currentIndex : currentIndex - 1;
     }
     const speed = speedList[currentIndex];
