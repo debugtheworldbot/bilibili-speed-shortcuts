@@ -74,7 +74,7 @@ async function init() {
 
 function getCurrentSpeed() {
   return speedOptions.find((item) =>
-    item.className.includes("bpx-state-active")
+    item.className.includes("bpx-state-active"),
   ).dataset.value;
 }
 
@@ -120,7 +120,7 @@ function setSpeed(speed) {
     return;
   }
   const option = speedOptions.find(
-    (item) => item.dataset.value === speed.toString()
+    (item) => item.dataset.value === speed.toString(),
   );
   if (option) {
     option.click();
@@ -136,7 +136,7 @@ async function initKeyElems() {
     return new Promise(async (resolve, reject) => {
       // await delay(1000)
       const ctrlKeylist = Array.from(
-        document.querySelectorAll(".bpx-player-ctrl-playbackrate-menu li")
+        document.querySelectorAll(".bpx-player-ctrl-playbackrate-menu li"),
       );
       if (ctrlKeylist.length === 0) {
         if (count <= 20) {
