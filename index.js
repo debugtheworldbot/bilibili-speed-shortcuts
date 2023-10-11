@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 倍速控制
 // @namespace    http://tampermonkey.net/
-// @version      0.9
+// @version      1.0
 // @description  使用快捷键控制bilibili的倍速选择
 // @author       pipizhu
 // @match        http*://www.bilibili.com/video/*
@@ -17,20 +17,23 @@
   document.body.onload = init;
 })();
 
-let speedOptions = [];
+const speedOptions = [];
 const speedList = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-let upKeyCode = "Period";
-let downKeyCode = "Comma";
+const upKeyCode = "Period";
+const downKeyCode = "Comma";
+let customUpKey = GM_getValue("customUpKey");
+let customDownKey = GM_getValue("customDownKey");
 
 async function init() {
   // addActionBtns();
   console.log("init keybindings");
-  GM_registerMenuCommand("更多设置", openSettings);
+  GM_registerMenuCommand("打开设置面板", openSettings);
   try {
     const cachedSpeed = GM_getValue("currentSpeed");
     // await delay(1000);
-    speedOptions = await initKeyElems();
+    const keys = await initKeyElems();
+    speedOptions.push(...keys);
     if (cachedSpeed) {
       console.log("cached speed", cachedSpeed);
       GM_registerMenuCommand("✅当前记忆倍速 X" + cachedSpeed, () => { });
@@ -61,7 +64,7 @@ function bindKeys() {
       setSpeed(1.5);
       return;
     }
-    if (e.key === "1") {
+    if (e.key === "1" || e.key === "z") {
       setSpeed(1);
       return;
     }
@@ -71,13 +74,22 @@ function bindKeys() {
     }
     const currentSpeed = getCurrentSpeed();
     currentIndex = speedList.indexOf(parseFloat(currentSpeed));
-    if (e.code === upKeyCode && e.shiftKey) {
-      // press >
-      currentIndex =
-        currentIndex >= speedList.length - 1 ? currentIndex : currentIndex + 1;
-    } else if (e.code === downKeyCode && e.shiftKey) {
-      // press <
-      currentIndex = currentIndex <= 0 ? currentIndex : currentIndex - 1;
+    const isCustom = customUpKey && customDownKey;
+    if (isCustom) {
+      if (e.key === customUpKey) {
+        currentIndex = Math.min(currentIndex + 1, speedList.length - 1);
+      }
+      if (e.key === customDownKey) {
+        currentIndex = Math.max(currentIndex - 1, 0);
+      }
+    } else {
+      if (e.code === upKeyCode && e.shiftKey) {
+        // increase speed
+        currentIndex = Math.min(currentIndex + 1, speedList.length - 1);
+      } else if (e.code === downKeyCode && e.shiftKey) {
+        // decrease speed
+        currentIndex = Math.max(currentIndex - 1, 0);
+      }
     }
     const speed = speedList[currentIndex];
     setSpeed(speed);
@@ -157,26 +169,49 @@ function clearSpeed() {
 
 function openSettings() {
   const speed = getCurrentSpeed();
+  const currentKey = {
+    up: customUpKey || ">",
+    down: customDownKey || "<",
+  };
   const html = `
     <div class='bli-speed-pannel-setting' id='bli-speed-pannel-setting' style='position: fixed; bottom: 0; right: 0;top: 0;left:0; z-index: 9999;display:flex;justify-content: center;align-items: center'>
       <div style='position:absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);z-index: -1'></div>
       <div style='background: white;padding:20px;border-radius: 5px;'>
-        <h2 style='text-align: center;'>当前速度：${speed}</h2>
+        <h2>当前速度：${speed}</h2>
         <div>
           <button id='save-speed'> 记忆当前速度 </button>
           <button id='clear-speed'> 取消记忆当前速度 </button>
         </div>
+
+        <h2>当前快捷键</h2>
+        <div>加速键:${currentKey.up} 减速键:${currentKey.down}</div>
+
+        <input type='checkbox' id='custom-speed-checkbox' />
+        <label for="custom-speed-checkbox">自定义快捷键</label>
+        <div>
+          <button id='custom-down-key'>设置减速快捷键 </button>
+          <button id='custom-up-key'>设置加速快捷键 </button>
+        </div>
+
         <button style='display: block; margin: 0 auto;margin-top: 20px; ' id='close-pannel-setting'>关闭面板</button>
       </div>
     </div>
   `;
   document.body.insertAdjacentHTML("beforeend", html);
   addStyle(`
-  .bli-speed-pannel-setting button{
+    .bli-speed-pannel-setting button{
       background: transparent;
       border: 1px solid;
       padding: 5px 8px;
       border-radius: 25px;
+      cursor: pointer;
+    }
+    .bli-speed-pannel-setting button:disabled{
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    .bli-speed-pannel-setting h2{
+      text-align: center;
     }
   `);
 
@@ -185,6 +220,58 @@ function openSettings() {
       document.getElementById("bli-speed-pannel-setting"),
     );
   };
+
+  const upKey = GM_getValue("customUpKey");
+  const downKey = GM_getValue("customDownKey");
+  const isCustom = upKey && downKey;
+  const customCheckBox = document.getElementById("custom-speed-checkbox");
+  const upBtn = document.getElementById("custom-up-key");
+  const downBtn = document.getElementById("custom-down-key");
+  customCheckBox.checked = isCustom;
+  upBtn.disabled = !isCustom;
+  downBtn.disabled = !isCustom;
+  if (upKey) {
+    upBtn.innerText = "加速键:" + upKey;
+  }
+  if (downKey) {
+    downBtn.innerText = "减速键:" + downKey;
+  }
+
+  function handleUpKey(e) {
+    const key = e.key;
+    customUpKey = key;
+    GM_setValue("customUpKey", key);
+    upBtn.innerText = "加速键:" + key;
+    document.removeEventListener("keydown", handleUpKey);
+  }
+  function handleDownKey(e) {
+    const key = e.key;
+    customDownKey = key;
+    GM_setValue("customDownKey", key);
+    downBtn.innerText = "减速键:" + key;
+    document.removeEventListener("keydown", handleDownKey);
+  }
+  upBtn.addEventListener("click", () => {
+    upBtn.innerText = "请输入加速键";
+    document.removeEventListener("keydown", handleDownKey);
+    document.addEventListener("keydown", handleUpKey);
+  });
+
+  downBtn.addEventListener("click", () => {
+    downBtn.innerText = "请输入减速键";
+    document.removeEventListener("keydown", handleUpKey);
+    document.addEventListener("keydown", handleDownKey);
+  });
+
+  customCheckBox.addEventListener("change", (e) => {
+    const checked = e.target.checked;
+    upBtn.disabled = !checked;
+    downBtn.disabled = !checked;
+    if (!checked) {
+      GM_setValue("customUpKey", "");
+      GM_setValue("customDownKey", "");
+    }
+  });
 
   document.getElementById("save-speed").addEventListener("click", () => {
     preserveSpeed();
