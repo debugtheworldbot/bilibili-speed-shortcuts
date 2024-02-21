@@ -18,7 +18,7 @@
 })();
 
 const speedOptions = [];
-const speedList = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const speedList = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 3];
 
 const upKeyCode = "Period";
 const downKeyCode = "Comma";
@@ -53,8 +53,6 @@ function getCurrentSpeed() {
 }
 
 function bindKeys() {
-  const currentSpeed = getCurrentSpeed();
-  let currentIndex = speedList.indexOf(parseFloat(currentSpeed));
   document.addEventListener("keydown", (e) => {
     if (e.key === "2") {
       setSpeed(2);
@@ -62,6 +60,10 @@ function bindKeys() {
     }
     if (e.key === "5") {
       setSpeed(1.5);
+      return;
+    }
+    if (e.key === "7") {
+      setSpeed(1.75);
       return;
     }
     if (e.key === "1" || e.key === "z") {
@@ -72,9 +74,10 @@ function bindKeys() {
       setSpeed(3);
       return;
     }
-    const currentSpeed = getCurrentSpeed();
-    currentIndex = speedList.indexOf(parseFloat(currentSpeed));
+    const video = getCurrentVideo();
+    const currentSpeed = video.playbackRate;
     const isCustom = customUpKey && customDownKey;
+    let currentIndex = speedList.findIndex((s) => s === currentSpeed);
     if (isCustom) {
       if (e.key === customUpKey) {
         currentIndex = Math.min(currentIndex + 1, speedList.length - 1);
@@ -97,19 +100,8 @@ function bindKeys() {
 }
 
 function setSpeed(speed) {
-  if (speed > 2) {
-    const video = getCurrentVideo();
-    video.playbackRate = speed;
-    return;
-  }
-  const option = speedOptions.find(
-    (item) => item.dataset.value === speed.toString(),
-  );
-  if (option) {
-    option.click();
-  } else {
-    console.error("set speed error", speed);
-  }
+  const video = getCurrentVideo();
+  video.playbackRate = speed;
 }
 
 async function initKeyElems() {
@@ -145,10 +137,8 @@ async function delay(time) {
 }
 
 function getCurrentVideo() {
-  let vdos = document.querySelectorAll(".bpx-player-video-wrap bwp-video");
-  if (vdos.length > 0) return vdos;
-  vdos = document.querySelectorAll(".bpx-player-video-wrap video");
-  return vdos[0];
+  const video = document.getElementsByTagName("video")[0];
+  return video;
 }
 
 function addStyle(styleString) {
