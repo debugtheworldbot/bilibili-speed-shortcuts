@@ -5,6 +5,7 @@
 // @description  使用快捷键控制bilibili的倍速选择
 // @author       pipizhu
 // @match        http*://www.bilibili.com/video/*
+// @match        *://www.youtube.com/watch?v=*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=bilibili.com
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -12,7 +13,7 @@
 // @license 		 MIT
 // ==/UserScript==
 
-(function() {
+(function () {
   "use strict";
   document.body.onload = init;
 })();
@@ -30,16 +31,16 @@ async function init() {
   console.log("init keybindings");
   GM_registerMenuCommand("打开设置面板", openSettings);
   try {
+    bindKeys();
     const cachedSpeed = GM_getValue("currentSpeed");
     // await delay(1000);
     const keys = await initKeyElems();
     speedOptions.push(...keys);
     if (cachedSpeed) {
       console.log("cached speed", cachedSpeed);
-      GM_registerMenuCommand("✅当前记忆倍速 X" + cachedSpeed, () => { });
+      GM_registerMenuCommand("✅当前记忆倍速 X" + cachedSpeed, () => {});
       setSpeed(cachedSpeed);
     }
-    bindKeys();
     console.log("bind success!");
   } catch (e) {
     console.log("error", e);
@@ -47,56 +48,67 @@ async function init() {
 }
 
 function getCurrentSpeed() {
-  return speedOptions.find((item) =>
-    item.className.includes("bpx-state-active"),
-  ).dataset.value;
+  const video = getCurrentVideo();
+  return video.playbackRate;
 }
 
 function bindKeys() {
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "2") {
-      setSpeed(2);
-      return;
-    }
-    if (e.key === "5") {
-      setSpeed(1.5);
-      return;
-    }
-    if (e.key === "7") {
-      setSpeed(1.75);
-      return;
-    }
-    if (e.key === "1" || e.key === "z") {
-      setSpeed(1);
-      return;
-    }
-    if (e.key === "3") {
-      setSpeed(3);
-      return;
-    }
-    const video = getCurrentVideo();
-    const currentSpeed = video.playbackRate;
-    const isCustom = customUpKey && customDownKey;
-    let currentIndex = speedList.findIndex((s) => s === currentSpeed);
-    if (isCustom) {
-      if (e.key === customUpKey) {
-        currentIndex = Math.min(currentIndex + 1, speedList.length - 1);
+  const keys = "0123456789";
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      if (
+        keys.indexOf(e.key) != -1 &&
+        !(e.isComposing || e.ctrlKey || e.altKey)
+      ) {
+        e.cancelBubble = true;
+        e.stopImmediatePropagation();
       }
-      if (e.key === customDownKey) {
-        currentIndex = Math.max(currentIndex - 1, 0);
+      if (e.key === "2") {
+        setSpeed(2);
+        return;
       }
-    } else {
-      if (e.code === upKeyCode && e.shiftKey) {
-        // increase speed
-        currentIndex = Math.min(currentIndex + 1, speedList.length - 1);
-      } else if (e.code === downKeyCode && e.shiftKey) {
-        // decrease speed
-        currentIndex = Math.max(currentIndex - 1, 0);
+      if (e.key === "5") {
+        setSpeed(1.5);
+        return;
       }
-    }
-    const speed = speedList[currentIndex];
-    setSpeed(speed);
-  });
+      if (e.key === "7") {
+        setSpeed(1.75);
+        return;
+      }
+      if (e.key === "1" || e.key === "z") {
+        setSpeed(1);
+        return;
+      }
+      if (e.key === "3") {
+        setSpeed(3);
+        return;
+      }
+      const video = getCurrentVideo();
+      const currentSpeed = video.playbackRate;
+      const isCustom = customUpKey && customDownKey;
+      let currentIndex = speedList.findIndex((s) => s === currentSpeed);
+      if (isCustom) {
+        if (e.key === customUpKey) {
+          currentIndex = Math.min(currentIndex + 1, speedList.length - 1);
+        }
+        if (e.key === customDownKey) {
+          currentIndex = Math.max(currentIndex - 1, 0);
+        }
+      } else {
+        if (e.code === upKeyCode && e.shiftKey) {
+          // increase speed
+          currentIndex = Math.min(currentIndex + 1, speedList.length - 1);
+        } else if (e.code === downKeyCode && e.shiftKey) {
+          // decrease speed
+          currentIndex = Math.max(currentIndex - 1, 0);
+        }
+      }
+      const speed = speedList[currentIndex];
+      setSpeed(speed);
+    },
+    true,
+  );
 }
 
 function setSpeed(speed) {
