@@ -13,12 +13,11 @@
 // @license 		 MIT
 // ==/UserScript==
 
-(function () {
+(function() {
   "use strict";
   document.body.onload = init;
 })();
 
-const speedOptions = [];
 const speedList = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 3];
 
 const upKeyCode = "Period";
@@ -34,11 +33,9 @@ async function init() {
     bindKeys();
     const cachedSpeed = GM_getValue("currentSpeed");
     // await delay(1000);
-    const keys = await initKeyElems();
-    speedOptions.push(...keys);
     if (cachedSpeed) {
       console.log("cached speed", cachedSpeed);
-      GM_registerMenuCommand("✅当前记忆倍速 X" + cachedSpeed, () => {});
+      GM_registerMenuCommand("✅当前记忆倍速 X" + cachedSpeed, () => { });
       setSpeed(cachedSpeed);
     }
     console.log("bind success!");
@@ -61,7 +58,6 @@ function bindKeys() {
         keys.indexOf(e.key) != -1 &&
         !(e.isComposing || e.ctrlKey || e.altKey)
       ) {
-        e.cancelBubble = true;
         e.stopImmediatePropagation();
       }
       if (e.key === "2") {
@@ -114,34 +110,6 @@ function bindKeys() {
 function setSpeed(speed) {
   const video = getCurrentVideo();
   video.playbackRate = speed;
-}
-
-async function initKeyElems() {
-  let count = 0;
-
-  async function getKeys() {
-    return new Promise(async (resolve, reject) => {
-      // await delay(1000)
-      const ctrlKeylist = Array.from(
-        document.querySelectorAll(".bpx-player-ctrl-playbackrate-menu li"),
-      );
-      if (ctrlKeylist.length === 0) {
-        if (count <= 20) {
-          count += 1;
-          await delay(1000);
-          resolve(await getKeys());
-        } else {
-          reject("get ctrl keys error ");
-        }
-      } else {
-        console.log("get key success");
-        return resolve(ctrlKeylist);
-      }
-    });
-  }
-
-  const keys = await getKeys();
-  return keys;
 }
 
 async function delay(time) {
