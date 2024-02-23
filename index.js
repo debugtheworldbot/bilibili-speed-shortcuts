@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 倍速控制
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  使用快捷键控制bilibili的倍速选择
 // @author       pipizhu
 // @match        http*://www.bilibili.com/video/*
@@ -12,6 +12,7 @@
 // @grant        GM_registerMenuCommand
 // @license 		 MIT
 // ==/UserScript==
+/* jshint esversion: 8 */
 
 (function() {
   "use strict";
